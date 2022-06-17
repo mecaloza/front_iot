@@ -4,6 +4,7 @@ import Image from "next/image";
 import styles from "../styles/Home.module.css";
 import Sidemenu from "../components/Sidemenu";
 import InfoCard from "../components/InfoCard";
+import Graph from "../components/Graph";
 
 var mqtt = require("mqtt");
 
@@ -17,6 +18,9 @@ var cont = 0;
 export default function Home() {
   const [current_val, setcurrentval] = useState("");
   const [volt_val, setvolt_val] = useState("");
+  //data grafica
+  const [data, setdata] = useState([{ id: 0, value: 0 }]);
+
   let current_ref = useRef("");
   current_ref.current = current_val;
   useEffect(() => {
@@ -27,11 +31,19 @@ export default function Home() {
       note = message.toString();
       if (topic === "Planta_electrica/corriente") {
         setcurrentval(note);
+        cont = cont + 1;
+        setdata((data) => [...data, { id: cont, value: note }]);
       } else if (topic === "Planta_electrica/voltaje") {
         setvolt_val(note);
       }
     });
   }, []);
+
+  // const data = [
+  //   { id: 0, value: 120, units: "corriente" },
+  //   { id: 1, value: 30, units: "corriente" },
+  //   { id: 3, value: 60, units: "corriente" },
+  // ];
 
   return (
     <div className={styles.container}>
@@ -43,8 +55,11 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <InfoCard topic={"corriente"} value={current_val}></InfoCard>
-        <InfoCard topic={"voltaje"} value={volt_val}></InfoCard>
+        <div className={styles.row_main}>
+          <InfoCard topic={"corriente"} value={current_val}></InfoCard>
+          <InfoCard topic={"voltaje"} value={volt_val}></InfoCard>
+        </div>
+        <Graph data={data}></Graph>
       </main>
     </div>
   );

@@ -1,0 +1,39 @@
+.container_header {
+  position: absolute;
+  width: 80%;
+  /* background-color: aquamarine; */
+  height: 100px;
+  top: 0;
+  left: 15%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* estilos de mesnaje
+ */
+
+.container_messge {
+  width: 95%;
+  height: 60px;
+  background-color: whitesmoke;
+  display: flex;
+  flex-direction: row;
+  /* justify-content: center; */
+  align-items: center;
+  border-radius: 10px;
+  margin-top: 5px;
+}
+
+.text_messge {
+  font-size: 30px;
+  color: black;
+  margin-top: 20px;
+}
+
+.client_test {
+  font-size: 20px;
+  color: black;
+  margin-top: 20px;
+  text-decoration: underline;
+  margin-right: 10px;
+}

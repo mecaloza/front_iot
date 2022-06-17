@@ -1,9 +1,81 @@
+import React, { useState, useEffect, useRef } from "react";
 import Head from "next/head";
 import Image from "next/image";
 import styles from "../styles/Home.module.css";
 import Sidemenu from "../components/Sidemenu";
+import Message from "../components/Message";
+
+const URL = "ws://127.0.0.1:8000/ws";
 
 export default function Machines() {
+  const clientRef = useRef(null);
+  const [waitingToReconnect, setwaitingToReconnect] = useState(null);
+  const [messages, setmessages] = useState([]);
+  const [isOpen, setisOpen] = useState(false);
+  const [chat, setchat] = useState("");
+
+  function addMessage(message) {
+    setmessages((messages) => [...messages, message]);
+  }
+  function sendMessage(message) {
+    if (clientRef.current) {
+      setmessages((messages) => [...messages, message]);
+      clientRef.current.send(message);
+    } else {
+      alert("Todavia no tienes conexion con el servidor");
+    }
+  }
+
+  useEffect(() => {
+    if (waitingToReconnect) {
+      return;
+    }
+    if (!clientRef.current) {
+      const client = new WebSocket(URL);
+      clientRef.current = client;
+
+      window.client = client;
+
+      client.onerror = (e) => console.log(e);
+
+      client.onopen = () => {
+        setisOpen(true);
+        console.log("ws connected");
+        // client.send("Hola");
+      };
+
+      client.onclose = () => {
+        if (clientRef.current) {
+          console.log("ws close");
+        } else {
+          console.log("reconnecting...");
+          return;
+        }
+        if (waitingToReconnect) {
+          return;
+        }
+        setisOpen(false);
+        setwaitingToReconnect(true);
+        setTimeout(() => setwaitingToReconnect(null), 5000);
+      };
+
+      client.onmessage = (message) => {
+        console.log("received message", message);
+        addMessage(JSON.parse(message.data));
+      };
+
+      return () => {
+        console.log("clean");
+        clientRef.current = null;
+        client.close();
+      };
+    }
+  }, [waitingToReconnect]);
+
+  useEffect(() => {
+    console.log("mensaje", messages);
+  }, [messages]);
+
   return (
     <div className={styles.container}>
       <Sidemenu></Sidemenu>
@@ -13,7 +85,35 @@ export default function Machines() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className={styles.main}>MACHINES</main>
+      <main className={styles.main}>
+        <div className={styles.chat_container}>
+          <div className={styles.message_container}>
+            {messages.slice(-5).map((item, index) => {
+              return (
+                <>
+                  <Message
+                    sender={item.sender}
+                    message={item.message}
+                  ></Message>
+                </>
+              );
+            })}
+          </div>
+          <div className={styles.send_container}>
+            <input
+              className={styles.input_message}
+              value={chat}
+              onChange={(event) => setchat(event.target.value)}
+            ></input>
+            <button
+              className={styles.button_send}
+              onClick={() => sendMessage({ sender: "cliente", message: chat })}
+            >
+              ENVIAR
+            </button>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
